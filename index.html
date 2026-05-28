@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘 할 일</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: transparent;
+    padding: 16px;
+    color: #1a1a1a;
+  }
+  .top-bar {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .top-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .top-date { font-size: 12px; color: #888; }
+  .big-ring-wrap {
+    display: flex; align-items: center; gap: 16px;
+    background: #f5f5f4; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .ring-info .ring-pct { font-size: 28px; font-weight: 600; color: #1a1a1a; line-height: 1; }
+  .ring-info .ring-sub { font-size: 12px; color: #888; margin-top: 4px; }
+  .cats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-bottom: 12px;
+  }
+  .cat-card {
+    background: #fff; border: 1px solid #e8e8e8;
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .cat-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .cat-pct { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+  .cat-count { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .cat-bar-track { height: 4px; background: #eee; border-radius: 99px; margin-top: 6px; }
+  .cat-bar-fill { height: 4px; border-radius: 99px; transition: width 0.8s ease; }
+  .section-label { font-size: 12px; font-weight: 600; color: #888; margin: 12px 0 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .task-list { display: flex; flex-direction: column; gap: 5px; }
+  .task-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; background: #fff;
+    border: 1px solid #e8e8e8; border-radius: 10px;
+    cursor: pointer; transition: background 0.12s;
+  }
+  .task-row:hover { background: #f9f9f8; }
+  .task-row.done { opacity: 0.45; }
+  .task-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid #ccc; display: flex;
+    align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .task-check.checked { background: #1D9E75; border-color: #1D9E75; }
+  .task-check.checked::after { content: '✓'; font-size: 10px; color: #fff; font-weight: 700; }
+  .task-name { font-size: 13px; color: #1a1a1a; flex: 1; }
+  .task-name.done-text { text-decoration: line-through; color: #bbb; }
+  .task-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+  .badge-church { background: #EEEDFE; color: #3C3489; }
+  .badge-personal { background: #EAF3DE; color: #27500A; }
+  .badge-work { background: #E6F1FB; color: #0C447C; }
+  .add-row { display: flex; gap: 6px; margin-top: 10px; }
+  .add-row input {
+    flex: 1; font-size: 13px; padding: 8px 12px;
+    border: 1px solid #e0e0e0; border-radius: 8px;
+    outline: none; background: #fff; color: #1a1a1a;
+  }
+  .add-row input:focus { border-color: #1D9E75; }
+  .add-row select {
+    font-size: 12px; padding: 8px 6px;
+    border: 1px solid #e0e0e0; border-radius: 8px;
+    outline: none; background: #fff; color: #1a1a1a; width: 72px;
+  }
+  .add-row button {
+    font-size: 12px; padding: 8px 14px;
+    background: #1D9E75; color: #fff; border: none;
+    border-radius: 8px; cursor: pointer; font-weight: 600;
+    transition: background 0.15s;
+  }
+  .add-row button:hover { background: #0F6E56; }
+  circle.ring-bg { stroke: #e8e8e8; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span class="top-title">☀️ 오늘 할 일</span>
+  <span class="top-date" id="today-date"></span>
+</div>
+
+<div class="big-ring-wrap">
+  <svg width="68" height="68" viewBox="0 0 72 72" style="flex-shrink:0">
+    <circle class="ring-bg" cx="36" cy="36" r="28" fill="none" stroke-width="7"/>
+    <circle id="ring-arc" cx="36" cy="36" r="28" fill="none"
+      stroke="#1D9E75" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="175.9" stroke-dashoffset="175.9"
+      transform="rotate(-90 36 36)"
+      style="transition: stroke-dashoffset 1s ease"/>
+  </svg>
+  <div class="ring-info">
+    <div class="ring-pct" id="total-pct">0%</div>
+    <div class="ring-sub" id="total-sub">완료 0 / 전체 0</div>
+  </div>
+</div>
+
+<div class="cats">
+  <div class="cat-card">
+    <div class="cat-label">교회</div>
+    <div class="cat-pct" id="pct-church">0%</div>
+    <div class="cat-count" id="cnt-church">0/0</div>
+    <div class="cat-bar-track"><div class="cat-bar-fill" id="bar-church" style="width:0%;background:#534AB7"></div></div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-label">개인</div>
+    <div class="cat-pct" id="pct-personal">0%</div>
+    <div class="cat-count" id="cnt-personal">0/0</div>
+    <div class="cat-bar-track"><div class="cat-bar-fill" id="bar-personal" style="width:0%;background:#639922"></div></div>
+  </div>
+  <div class="cat-card">
+    <div class="cat-label">회사</div>
+    <div class="cat-pct" id="pct-work">0%</div>
+    <div class="cat-count" id="cnt-work">0/0</div>
+    <div class="cat-bar-track"><div class="cat-bar-fill" id="bar-work" style="width:0%;background:#185FA5"></div></div>
+  </div>
+</div>
+
+<div class="section-label">할 일 목록</div>
+<div class="task-list" id="task-list"></div>
+
+<div class="add-row">
+  <input type="text" id="new-task-name" placeholder="새 할 일 추가...">
+  <select id="new-task-cat">
+    <option value="교회">교회</option>
+    <option value="개인">개인</option>
+    <option value="회사">회사</option>
+  </select>
+  <button id="add-btn">+ 추가</button>
+</div>
+
+<script>
+  const CIRC = 2 * Math.PI * 28;
+  const STORAGE_KEY = 'notion_todo_tasks';
+
+  function loadTasks() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return [
+      { id: 1, name: '주일 설교 준비', cat: '교회', done: false },
+      { id: 2, name: '중고등부 공과 검토', cat: '교회', done: false },
+      { id: 3, name: '운동 30분', cat: '개인', done: false },
+      { id: 4, name: '독서 20분', cat: '개인', done: false },
+      { id: 5, name: 'SNS 콘텐츠 기획', cat: '회사', done: false },
+    ];
+  }
+
+  function saveTasks() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch(e) {}
+  }
+
+  let tasks = loadTasks();
+
+  function getBadgeClass(cat) {
+    if (cat === '교회') return 'badge-church';
+    if (cat === '개인') return 'badge-personal';
+    return 'badge-work';
+  }
+
+  function render() {
+    const total = tasks.length;
+    const done = tasks.filter(t => t.done).length;
+    const pct = total === 0 ? 0 : Math.round(done / total * 100);
+
+    document.getElementById('total-pct').textContent = pct + '%';
+    document.getElementById('total-sub').textContent = '완료 ' + done + ' / 전체 ' + total;
+    document.getElementById('ring-arc').style.strokeDashoffset = CIRC * (1 - pct / 100);
+
+    [['church','교회'],['personal','개인'],['work','회사']].forEach(([key, catName]) => {
+      const ct = tasks.filter(t => t.cat === catName);
+      const cd = ct.filter(t => t.done).length;
+      const cp = ct.length === 0 ? 0 : Math.round(cd / ct.length * 100);
+      document.getElementById('pct-' + key).textContent = cp + '%';
+      document.getElementById('cnt-' + key).textContent = cd + '/' + ct.length;
+      document.getElementById('bar-' + key).style.width = cp + '%';
+    });
+
+    const list = document.getElementById('task-list');
+    list.innerHTML = '';
+    tasks.forEach((t, i) => {
+      const row = document.createElement('div');
+      row.className = 'task-row' + (t.done ? ' done' : '');
+      row.innerHTML =
+        '<div class="task-check ' + (t.done ? 'checked' : '') + '"></div>' +
+        '<span class="task-name ' + (t.done ? 'done-text' : '') + '">' + t.name + '</span>' +
+        '<span class="task-badge ' + getBadgeClass(t.cat) + '">' + t.cat + '</span>' +
+        '<span style="font-size:11px;color:#ccc;cursor:pointer;margin-left:4px" data-del="' + i + '">✕</span>';
+      row.querySelector('.task-check').addEventListener('click', (e) => {
+        e.stopPropagation(); t.done = !t.done; saveTasks(); render();
+      });
+      row.querySelector('[data-del]').addEventListener('click', (e) => {
+        e.stopPropagation();
+        tasks.splice(i, 1); saveTasks(); render();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('add-btn').addEventListener('click', () => {
+    const name = document.getElementById('new-task-name').value.trim();
+    const cat = document.getElementById('new-task-cat').value;
+    if (!name) return;
+    tasks.push({ id: Date.now(), name, cat, done: false });
+    document.getElementById('new-task-name').value = '';
+    saveTasks(); render();
+  });
+
+  document.getElementById('new-task-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('add-btn').click();
+  });
+
+  const d = new Date();
+  document.getElementById('today-date').textContent =
+    d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+
+  render();
+</script>
+</body>
+</html>
